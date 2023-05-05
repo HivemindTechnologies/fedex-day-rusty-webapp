@@ -1,7 +1,6 @@
 FROM rust:1.69.0 as builder
 WORKDIR /usr/src/rust-workshop
 COPY . .
-RUN apt-get update && apt-get install -y cmake
 RUN cargo build --release
 
 FROM debian:bullseye-slim

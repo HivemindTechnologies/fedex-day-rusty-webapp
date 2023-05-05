@@ -52,7 +52,7 @@ async fn get_joke() -> Result<Joke, Box<dyn std::error::Error>> {
         .header("Accept", "application/json")
         .send()
         .await?;
-//    let res = reqwest::get("https://icanhazdadjoke.com/").await?;
+    //    let res = reqwest::get("https://icanhazdadjoke.com/").await?;
     println!("Status: {}", res.status());
     println!("Headers:\n{:#?}", res.headers());
 
@@ -64,8 +64,11 @@ async fn get_joke() -> Result<Joke, Box<dyn std::error::Error>> {
 }
 
 async fn push_to_kafka(joke: &Joke) -> Result<(), KafkaError> {
+    let bootstrap_servers = std::env::var("BOOTSTRAP_SERVERS")
+        .or_else(|_| -> Result<String, ()> { Ok("localhost:9092".to_string()) })
+        .unwrap();
     let producer: &FutureProducer = &ClientConfig::new()
-        .set("bootstrap.servers", "localhost:9092")
+        .set("bootstrap.servers", bootstrap_servers)
         .set("message.timeout.ms", "5000")
         .create()
         .expect("Producer creation error");

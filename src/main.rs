@@ -1,5 +1,9 @@
 use axum::Json;
-use axum::{http::StatusCode, routing::post, Router};
+use axum::{
+    http::StatusCode,
+    routing::{get, post},
+    Router,
+};
 use rdkafka::config::ClientConfig;
 use rdkafka::error::KafkaError;
 use rdkafka::producer::{FutureProducer, FutureRecord};
@@ -26,6 +30,7 @@ async fn main() {
 
     // build our application with a route
     let app = Router::new()
+        .route("/health", get(health))
         // Get a joke
         .route("/joke", post(joke));
 
@@ -34,6 +39,10 @@ async fn main() {
         .serve(app.into_make_service())
         .await
         .unwrap();
+}
+
+async fn health() -> (StatusCode, ()) {
+    (StatusCode::OK, ())
 }
 
 async fn joke() -> (StatusCode, Json<Joke>) {

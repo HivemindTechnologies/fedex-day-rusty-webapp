@@ -47,7 +47,12 @@ async fn joke() -> (StatusCode, Json<Joke>) {
 }
 
 async fn get_joke() -> Result<Joke, Box<dyn std::error::Error>> {
-    let res = reqwest::get("https://icanhazdadjoke.com/").await?;
+    let res = reqwest::Client::new()
+        .get("https://icanhazdadjoke.com/")
+        .header("Accept", "application/json")
+        .send()
+        .await?;
+//    let res = reqwest::get("https://icanhazdadjoke.com/").await?;
     println!("Status: {}", res.status());
     println!("Headers:\n{:#?}", res.headers());
 
@@ -57,24 +62,6 @@ async fn get_joke() -> Result<Joke, Box<dyn std::error::Error>> {
     println!("Body:\n{}", body);
     Ok(joke.clone())
 }
-
-// async fn joke(
-//     // this argument tells axum to parse the request body
-//     // as JSON into a `CreateUser` type
-// ) -> (StatusCode, Json<User>) {
-//     // insert your application logic here
-
-//     // this will be converted into a JSON response
-//     // with a status code of `201 Created`
-//     (StatusCode::CREATED, ())
-// }
-
-// async fn joke() -> Result<Joke, reqwest::Error> {
-//     let res = reqwest::get("https://icanhazdadjoke.com/").await?;
-//     let body = res.text().await?;
-//     let joke: Joke = serde_json::from_str(&body)?;
-//     Ok(joke)
-// }
 
 async fn push_to_kafka(joke: &Joke) -> Result<(), KafkaError> {
     let producer: &FutureProducer = &ClientConfig::new()
@@ -99,21 +86,3 @@ async fn push_to_kafka(joke: &Joke) -> Result<(), KafkaError> {
         .map(|(_, _)| println!("Sent key: {} payload: {}", joke.id, payload))
         .map_err(|(e, _)| e)
 }
-
-// use std::fmt::Write;
-// use std::time::Duration;
-// use kafka::producer::{Producer, Record, RequiredAcks};
-
-// let mut producer =
-//     Producer::from_hosts(vec!("localhost:9092".to_owned()))
-//         .with_ack_timeout(Duration::from_secs(1))
-//         .with_required_acks(RequiredAcks::One)
-//         .create()
-//         .unwrap();
-
-// let mut buf = String::with_capacity(2);
-// for i in 0..10 {
-//   let _ = write!(&mut buf, "{}", i); // some computation of the message data to be sent
-//   producer.send(&Record::from_value("my-topic", buf.as_bytes())).unwrap();
-//   buf.clear();
-// }

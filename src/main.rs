@@ -4,6 +4,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
+use log::{info, LevelFilter};
 use rdkafka::config::ClientConfig;
 use rdkafka::error::KafkaError;
 use rdkafka::producer::{FutureProducer, FutureRecord};
@@ -26,6 +27,7 @@ struct Joke {
 //Get example (async)
 #[tokio::main]
 async fn main() {
+    env_logger::builder().filter_level(LevelFilter::Info).init();
     //    tracing_subscriber::fmt::init();
 
     // build our application with a route
@@ -61,13 +63,13 @@ async fn get_joke() -> Result<Joke, Box<dyn std::error::Error>> {
         .send()
         .await?;
     //    let res = reqwest::get("https://icanhazdadjoke.com/").await?;
-    println!("Status: {}", res.status());
-    println!("Headers:\n{:#?}", res.headers());
+    info!("Status: {}", res.status());
+    info!("Headers:\n{:#?}", res.headers());
 
     let body = res.text().await?;
     let joke: Joke = serde_json::from_str(&body)?;
     push_to_kafka(&joke).await.unwrap();
-    println!("Body:\n{}", body);
+    info!("Body:\n{}", body);
     Ok(joke.clone())
 }
 
@@ -82,7 +84,7 @@ async fn push_to_kafka(joke: &Joke) -> Result<(), KafkaError> {
         .expect("Producer creation error");
 
     let payload = serde_json::to_string(joke).unwrap();
-    println!("Pushing to Kafka topic {} payload {}", "jokes", payload);
+    info!("Pushing to Kafka topic {} payload {}", "jokes", payload);
 
     let delivery_status = producer
         .send(
@@ -94,6 +96,6 @@ async fn push_to_kafka(joke: &Joke) -> Result<(), KafkaError> {
         .await;
 
     delivery_status
-        .map(|(_, _)| println!("Sent key: {} payload: {}", joke.id, payload))
+        .map(|(_, _)| info!("Sent key: {} payload: {}", joke.id, payload))
         .map_err(|(e, _)| e)
 }

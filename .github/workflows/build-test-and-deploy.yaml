@@ -2,7 +2,7 @@ name: Build and Deploy
 
 on:
   push:
-    branches: ['example']
+    branches: ['fedex']
 
 permissions:
   id-token: write

@@ -41,7 +41,7 @@ async fn joke() -> (StatusCode, Json<Joke>) {
     // insert your application logic here
 
     // this will be converted into a JSON response
-    // with a status code of `201 Created`
+    // with a status code of `200 OK`
     let joke = get_joke().await.unwrap();
     (StatusCode::OK, Json(joke))
 }
